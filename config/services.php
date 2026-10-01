@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Google
+    |--------------------------------------------------------------------------
+    |
+    | Sign-in with Google. The credentials come from a Web OAuth client in
+    | Google Cloud Console; see docs/GOOGLE_AUTH_SETUP.md for the exact
+    | screens. The client secret must never reach the browser, which is why
+    | this is read here on the server and never passed to a view.
+    |
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
 ];

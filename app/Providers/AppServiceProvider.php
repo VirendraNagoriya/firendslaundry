@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Services\Auth\SupabaseAuthClient;
 use App\Services\OtpService;
 use App\Services\Sms\LogDriver;
 use App\Services\Sms\SmsDriver;
@@ -20,12 +19,6 @@ class AppServiceProvider extends ServiceProvider
         // One tenant context per request, so the global scopes and the
         // controllers always agree on which business is in play.
         $this->app->singleton(TenantContext::class);
-
-        $this->app->singleton(SupabaseAuthClient::class, fn () => new SupabaseAuthClient(
-            url: config('supabase.url'),
-            anonKey: config('supabase.anon_key'),
-            serviceRoleKey: config('supabase.service_role_key'),
-        ));
 
         $this->app->singleton(SmsDriver::class, function ($app) {
             $driver = config('sms.driver');

@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\Role;
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\EmployeeController;
@@ -22,16 +21,14 @@ use Illuminate\Support\Facades\Route;
 | protection stays switched on. The TextBee API key is never reachable
 | from here.
 |
+| There is deliberately no /api/auth group. Sign-in is a browser concern —
+| Google OAuth and password sign-in both live in routes/web.php and finish
+| with a session cookie. Issuing a token to a script would mean shipping
+| bearer auth, which this app does not do.
+|
 */
 
 Route::middleware(['web'])->group(function () {
-
-    // ---- Authentication (Supabase Auth one-time code) -----------------
-    Route::prefix('auth')->group(function () {
-        Route::post('send-code', [AuthController::class, 'sendCode'])->middleware('throttle:6,1');
-        Route::post('verify-code', [AuthController::class, 'verifyCode'])->middleware('throttle:10,1');
-        Route::post('logout', [AuthController::class, 'logout'])->middleware('auth');
-    });
 
     // ---- Everything below requires a signed-in session ----------------
     Route::middleware('auth')->group(function () {

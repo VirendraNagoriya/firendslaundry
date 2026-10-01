@@ -39,7 +39,12 @@ class PageRenderTest extends TestCase
     {
         parent::setUp();
 
-        config(['supabase.enabled' => false]);
+        // No Google credentials in tests, so the sign-in page renders its
+        // password form only. Nothing here should need an OAuth client.
+        config([
+            'signin.google.enabled' => false,
+            'signin.password.enabled' => true,
+        ]);
 
         $this->business = Business::factory()->create();
         $this->branch = Branch::factory()->create([
@@ -64,11 +69,38 @@ class PageRenderTest extends TestCase
             ->assertSee('Laundry', false);
     }
 
-    public function test_the_verify_page_renders(): void
+    public function test_the_register_page_renders(): void
     {
-        $this->withSession(['login.identifier' => '+919876543210'])
-            ->get(route('login.verify'))
-            ->assertOk();
+        config(['signin.registration.open' => true]);
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Create your account', false);
+    }
+
+    /**
+     * The Google setup step asks which laundry, and must render that form.
+     */
+    public function test_the_google_setup_page_renders_with_a_pending_identity(): void
+    {
+        config([
+            'signin.google.enabled' => true,
+            'signin.google.client_id' => 'test-client-id',
+            'signin.google.client_secret' => 'test-client-secret',
+        ]);
+
+        $this->withSession([
+            'google.pending_identity' => [
+                'provider_id' => 'google-sub-render',
+                'email' => 'render@example.com',
+                'email_verified' => true,
+                'name' => 'Asha Patil',
+                'avatar' => null,
+            ],
+        ])
+            ->get(route('login.google.setup'))
+            ->assertOk()
+            ->assertSee('Asha Patil');
     }
 
     /**

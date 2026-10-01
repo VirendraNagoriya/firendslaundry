@@ -18,20 +18,26 @@ class User extends Authenticatable
     protected $fillable = [
         'business_id',
         'branch_id',
-        'supabase_user_id',
         'name',
         'mobile',
         'email',
+        'avatar',
         'role',
         'status',
         'last_login_at',
     ];
 
     /**
-     * "Remember me" is intentionally not supported: there are no passwords
-     * in this system and a laundry workstation should not hold a session
-     * open indefinitely. Without these overrides the framework's auth layer
-     * reads a remember_token column that the users table does not have.
+     * `password` is deliberately not fillable: a plaintext password must
+     * never reach this model through mass assignment. Set it explicitly, and
+     * the "hashed" cast below takes care of the hashing.
+     */
+
+    /**
+     * "Remember me" is intentionally not supported: a laundry workstation
+     * should not hold a session open indefinitely. Without these overrides
+     * the framework's auth layer reads a remember_token column that the
+     * users table does not have.
      */
     public function getRememberToken(): ?string
     {
@@ -51,7 +57,11 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            // Hashed on assignment, so a caller can pass a plaintext value
+            // and still never persist it.
+            'password' => 'hashed',
             'role' => Role::class,
+            'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
     }
@@ -59,6 +69,28 @@ class User extends Authenticatable
     public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * External accounts linked to this profile, e.g. Google sign-in.
+     */
+    public function oauthAccounts(): HasMany
+    {
+        return $this->hasMany(OAuthAccount::class);
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    /**
+     * Whether this profile signs in with a password it owns, rather than
+     * only through an external provider.
+     */
+    public function usesPassword(): bool
+    {
+        return filled($this->password);
     }
 
     public function regions(): BelongsToMany

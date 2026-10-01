@@ -1,12 +1,11 @@
 <?php
 
 use App\Exceptions\BranchLimitExceededException;
-use App\Exceptions\SupabaseAuthException;
+use App\Exceptions\IdentityException;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\FlushTenantContext;
 use App\Services\AssignmentException;
 use App\Services\OrderTransitionException;
-use App\Services\OtpAccountException;
 use App\Services\OtpException;
 use App\Services\PaymentException;
 use Illuminate\Foundation\Application;
@@ -62,17 +61,14 @@ return Application::configure(basePath: dirname(__DIR__))
             };
         };
 
-        // A wrong or expired OTP is a validation problem, and the message
-        // is safe to show: it never reveals whether the number is registered.
+        // A wrong or expired SMS OTP. No longer used for sign-in, which is
+        // Google or a password, but kept for any future "prove your mobile"
+        // step.
         $exceptions->render(
             fn (OtpException $e) => $render($e->getMessage(), 422, [
                 'reason' => $e->reason,
                 'retry_after' => $e->retryAfter,
             ])(request())
-        );
-
-        $exceptions->render(
-            fn (OtpAccountException $e) => $render($e->getMessage(), 403)(request())
         );
 
         $exceptions->render(
@@ -96,11 +92,11 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (PaymentException $e) => $render($e->getMessage(), 422)(request())
         );
 
-        // A refused or unconfigured Supabase sign-in. The message is safe
-        // for the person at the screen; the provider detail stays in the
-        // log.
+        // A refused sign-in: the person proved who they are, but the app
+        // cannot decide which profile to sign them in as. The message is safe
+        // for the person at the screen; provider detail stays in the log.
         $exceptions->render(
-            fn (SupabaseAuthException $e) => $render($e->getMessage(), 422, array_filter([
+            fn (IdentityException $e) => $render($e->getMessage(), 422, array_filter([
                 'reason' => $e->reason,
             ]))(request())
         );

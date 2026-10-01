@@ -24,8 +24,8 @@ use Tests\TestCase;
  * lifecycle (section 14), assignment rules (section 17), payments
  * (section 18) and soft deletion (section 21).
  *
- * Sign-in is covered separately in SupabaseAuthTest, because Supabase
- * owns the one-time code and the keys.
+ * Sign-in is covered separately in IdentityAuthTest, because proving who
+ * somebody is is a different problem from what they may do once inside.
  */
 class LaundryPlatformTest extends TestCase
 {
